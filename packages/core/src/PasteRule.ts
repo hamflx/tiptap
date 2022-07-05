@@ -112,10 +112,13 @@ function run(config: {
     }
 
     const resolvedFrom = Math.max(from, pos)
-    const resolvedTo = Math.min(to, pos + node.content.size)
+    // +1 以包含该 node 的起始标签，以保证与 to 的定位基准一致。
+    const resolvedTo = Math.min(to, pos + 1 + node.content.size)
+    const relFrom = Math.max(0, resolvedFrom - pos - 1) // -1 以去除起始标签。
+    const relTo = Math.max(0, resolvedTo - pos - 1) // -1 以去除起始标签。
     const textToMatch = node.textBetween(
-      resolvedFrom - pos,
-      resolvedTo - pos,
+      relFrom,
+      relTo,
       undefined,
       '\ufffc',
     )
@@ -127,7 +130,7 @@ function run(config: {
         return
       }
 
-      const start = resolvedFrom + match.index + 1
+      const start = resolvedFrom + match.index
       const end = start + match[0].length
       const range = {
         from: state.tr.mapping.map(start),
@@ -228,7 +231,11 @@ export function pasteRulesPlugin(props: { editor: Editor, rules: PasteRule[] }):
         const handler = run({
           editor,
           state: chainableState,
-          from: Math.max(from - 1, 0),
+          // 这里我认为不用 -1，保留原始 from、to 即可，至于内部绝对位置与相对位置的差值计算，
+          // 应该是内部自己的逻辑，不应暴露到外面（因为暴露到外面，to 也需要同步 -1，
+          // 而且，如果有需要原始位置数据的，还需要通过 +1 补偿回来，得不偿失）。
+          // PS: 修改这里是因为碰到了 bug：https://github.com/ueberdosis/tiptap/issues/2939。
+          from,
           to: to.b,
           rule,
         })
