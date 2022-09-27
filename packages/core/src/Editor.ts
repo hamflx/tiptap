@@ -100,7 +100,12 @@ export class Editor extends EventEmitter<EditorEvents> {
         return
       }
 
-      this.commands.focus(this.options.autofocus)
+      // 并不是所有的编辑器初始化完毕都需要聚焦的。
+      if (typeof this.options.autofocus !== 'undefined') {
+        // 聚焦也并不一定要人能看到这个输入框，也许这个输入处于动画过程中？
+        // 另外，如果这个输入框在一个 overflow=hidden 的容器内，存在潜在的意外滚动这个容器的风险。
+        this.commands.focus(this.options.autofocus, { scrollIntoView: false })
+      }
       this.emit('create', { editor: this })
     }, 0)
   }
