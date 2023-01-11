@@ -42,7 +42,7 @@ export function isMarkActive(
       // Paragraph(Text[Bold](这里是>|文本内容))
       // 而 codeBlock 中的文本是无法设置 mark 标记的，在这里计算的时候，会导致总有一部分为无标记状态，
       // 从而导致标记按钮永远无法处于激活状态。因此，这里检查如果这个 mark 无法应用到这个 node 上，则不统计该 node。
-      if (!node.isText && type && !node.type.allowsMarkType(type)) {
+      if (node.isTextblock && type && !node.type.allowsMarkType(type)) {
         return false
       }
       if (!node.isText && !node.marks.length) {
